@@ -5,17 +5,25 @@ const second = 1000
 const minute = 5 * second
 const duration = 2 * minute
 
+const State = {
+	active: 'active',
+	pause: 'pause',
+	stop: 'stop'
+} as const
+
+type State = (typeof State)[keyof typeof State]
+
 function App() {
 	const [counts, setCounts] = useState(0)
 	const [timer, setTimer] = useState(duration)
-	const [state, setState] = useState<'active' | 'pause' | 'stop'>('pause')
+	const [state, setState] = useState<State>(State.pause)
 	const timeoutId = useRef<number>(undefined)
 
 	useEffect(() => {
-		if (state === 'active') {
+		if (state === State.active) {
 			if (timer <= 0) {
-				// For now just stop, then start next period
-				setState('stop')
+				setCounts((counts) => counts - 1)
+				setTimer(duration)
 			} else {
 				timeoutId.current = setTimeout(() => {
 					setTimer(timer - second)
@@ -23,15 +31,21 @@ function App() {
 			}
 		}
 
-		if (state === 'pause') {
+		if (state === State.pause) {
 			clearTimeout(timeoutId.current)
 		}
 
-		if (state === 'stop') {
+		if (state === State.stop) {
 			clearTimeout(timeoutId.current)
 			setTimer(duration)
 		}
 	}, [state, timer])
+
+	useEffect(() => {
+		if (counts <= 0) {
+			setState(State.stop)
+		}
+	}, [counts])
 
 	const minutes = Math.trunc(timer / minute)
 	const seconds = Math.trunc((timer % minute) / second)
@@ -39,29 +53,46 @@ function App() {
 	return (
 		<div>
 			<h2>{state}</h2>
-			<div>timer: {timer}</div>
-			<div>minutes: {minutes}</div>
-			<div>seconds: {seconds}</div>
+			<div>
+				{counts ? minutes : 0} : {seconds}
+			</div>
+			<div></div>
+			<button type="button" onClick={() => setCounts(counts + 1)}>
+				Add period
+			</button>
+			<button
+				type="button"
+				onClick={() => setCounts(counts - 1)}
+				disabled={!counts}
+			>
+				Remove period
+			</button>
+			<button
+				type="button"
+				onClick={() => setState(State.active)}
+				disabled={state === State.active || !counts}
+			>
+				Start
+			</button>
+			<button
+				type="button"
+				onClick={() => setState(State.pause)}
+				disabled={state !== State.active}
+			>
+				Pause
+			</button>
+			<button
+				type="button"
+				onClick={() => setState(State.stop)}
+				disabled={state === State.stop}
+			>
+				Stop
+			</button>
 			<ul>
 				{Array.from({ length: counts }).map((_, index) => (
 					<li key={index}>{index}</li>
 				))}
 			</ul>
-			<button type="button" onClick={() => setCounts(counts + 1)}>
-				Add period
-			</button>
-			<button type="button" onClick={() => setCounts(counts - 1)}>
-				Remove period
-			</button>
-			<button type="button" onClick={() => setState('active')}>
-				Start
-			</button>
-			<button type="button" onClick={() => setState('pause')}>
-				Pause
-			</button>
-			<button type="button" onClick={() => setState('stop')}>
-				Stop
-			</button>
 		</div>
 	)
 }
