@@ -20,8 +20,9 @@
 	},
 	"javascript": {
 		"formatter": {
-			"quoteStyle": "double",
-			"semicolons": "asNeeded"
+			"quoteStyle": "single",
+			"semicolons": "asNeeded",
+			"trailingCommas": "none"
 		}
 	},
 	"assist": {
